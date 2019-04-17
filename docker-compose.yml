@@ -1,0 +1,182 @@
+# docker-compose up -d
+# docker-compose up <service-name>
+# docker-compose stop
+
+version: '3.7'
+
+services:
+
+  elk:
+    image: sebp/elk:670
+    container_name: elk_5601
+    ports:
+      #Kibana
+      - "5601:5601"
+      #Elasticsearch
+      - "9200:9200"
+      #Logstash
+      - "5044:5044"
+    volumes:
+      - ./elk/input.conf:/etc/logstash/conf.d/02-beats-input.conf
+
+  hystrix-dashboard:
+    image: kennedyoliveira/hystrix-dashboard:1.5.6
+    container_name: hystrix_7979
+    ports:
+      - "7979:7979"
+
+  zipkin-dashboard:
+    image: openzipkin/zipkin:2.12.8
+    container_name: zipkin_9411
+    ports:
+      - "9411:9411"
+
+  config-server:
+    image: nikitanov/config-server:0.0.1
+    container_name: config-server_8888
+    restart: on-failure
+    ports:
+      - "8888:8080"
+    environment:
+      SERVER_PORT: 8080
+      CONFIG_HOST: 10.0.2.15
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_NON_SECURE_PORT: 8888
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/manage/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  eureka:
+    image: nikitanov/eureka-server:0.0.1
+    container_name: eureka_8282
+    restart: on-failure
+    ports:
+      - "8282:8080"
+    environment:
+      CONFIG_HOST: 10.0.2.15
+      CONFIG_PORT: 8888
+      EUREKA_HOST: 10.0.2.15
+      EUREKA_PORT: 8282
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_HOST: 10.0.2.15
+      SERVER_PORT: 8080
+      SERVER_NON_SECURE_PORT: 8282
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    depends_on:
+      - config-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/manage/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  workspaces_1:
+    image: nikitanov/workspaces-api:0.0.1
+    container_name: workspaces_9090
+    restart: on-failure
+    ports:
+      - "9090:8080"
+    environment:
+      CONFIG_HOST: 10.0.2.15
+      CONFIG_PORT: 8888
+      EUREKA_HOST: 10.0.2.15
+      EUREKA_PORT: 8282
+      ZIPKIN_HOST: 10.0.2.15
+      ZIPKIN_PORT: 9411
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_HOST: 10.0.2.15
+      SERVER_PORT: 8080
+      SERVER_NON_SECURE_PORT: 9090
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    depends_on:
+      - config-server
+      - eureka
+
+  workspaces_2:
+    image: nikitanov/workspaces-api:0.0.1
+    container_name: workspaces_9091
+    restart: on-failure
+    ports:
+      - "9091:8080"
+    environment:
+      CONFIG_HOST: 10.0.2.15
+      CONFIG_PORT: 8888
+      EUREKA_HOST: 10.0.2.15
+      EUREKA_PORT: 8282
+      ZIPKIN_HOST: 10.0.2.15
+      ZIPKIN_PORT: 9411
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_HOST: 10.0.2.15
+      SERVER_PORT: 8080
+      SERVER_NON_SECURE_PORT: 9091
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    depends_on:
+      - config-server
+      - eureka
+
+  employees:
+    image: nikitanov/employees-api:0.0.1
+    container_name: employees_9092
+    restart: on-failure
+    ports:
+      - "9092:8080"
+    environment:
+      CONFIG_HOST: 10.0.2.15
+      CONFIG_PORT: 8888
+      EUREKA_HOST: 10.0.2.15
+      EUREKA_PORT: 8282
+      ZIPKIN_HOST: 10.0.2.15
+      ZIPKIN_PORT: 9411
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_HOST: 10.0.2.15
+      SERVER_PORT: 8080
+      SERVER_NON_SECURE_PORT: 9092
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    depends_on:
+      - config-server
+      - eureka
+
+  gateway:
+    image: nikitanov/api-gateway:0.0.1
+    container_name: gateway_9094
+    restart: on-failure
+    ports:
+      - "9094:8080"
+    environment:
+      CONFIG_HOST: 10.0.2.15
+      CONFIG_PORT: 8888
+      EUREKA_HOST: 10.0.2.15
+      EUREKA_PORT: 8282
+      ZIPKIN_HOST: 10.0.2.15
+      ZIPKIN_PORT: 9411
+      LOGGING_CONFIG: "/logback/logback-spring.xml"
+      LOGSTASH_HOST: 10.0.2.15
+      LOGSTASH_PORT: 5044
+      SERVER_HOST: 10.0.2.15
+      SERVER_PORT: 8080
+      SERVER_NON_SECURE_PORT: 9094
+    volumes:
+      - ./logback/logback.xml:/logback/logback-spring.xml
+    depends_on:
+      - config-server
+      - eureka

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+<configuration>
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <remoteHost>${LOGSTASH_HOST:-localhost}</remoteHost>
+        <port>${LOGSTASH_PORT:-5044}</port>
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"appname":"${appName}"}</customFields>
+            <customFields>{"appport":"${SERVER_NON_SECURE_PORT:-8080}"}</customFields>
+        </encoder>
+    </appender>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH" />
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

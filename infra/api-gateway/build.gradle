@@ -1,0 +1,15 @@
+version '0.0.1'
+
+mainClassName = "com.epam.hw.netflix.ApiGatewayApplication"
+
+dependencies {
+    compile libpacks.spring_common
+    compile libpacks.cloud_routing
+    compile libpacks.cloud_common
+    compile libpacks.cloud_sleuth
+    compile libpacks.cloud_zipkin
+    compile libpacks.logstash
+    compile project(':commons')
+}
+
+jib.to.image = "nikitanov/${project.name}:${project.version}"

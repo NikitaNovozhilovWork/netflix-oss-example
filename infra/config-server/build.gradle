@@ -1,0 +1,11 @@
+version = '0.0.1'
+
+mainClassName = "com.epam.hw.netflix.ConfigServerApplication"
+
+dependencies {
+    compile libpacks.logstash
+    compile libpacks.cloud_config_server
+    compile libpacks.spring_common
+}
+
+jib.to.image = "nikitanov/${project.name}:${project.version}"
