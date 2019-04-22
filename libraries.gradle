@@ -34,7 +34,16 @@ ext {
             ],
 
             spring_integration: [
-                    'org.springframework.boot:spring-boot-starter-integration'
+                    'org.springframework.boot:spring-boot-starter-integration',
+                    'org.springframework.integration:spring-integration-kafka:3.1.2.RELEASE',
+                    'org.springframework.kafka:spring-kafka',
+                    'org.springframework.integration:spring-integration-http',
+                    'org.springframework.integration:spring-integration-file'
+            ],
+            
+            spring_data: [
+                    'org.springframework.boot:spring-boot-starter-data-jpa',
+                    'org.postgresql:postgresql:42.2.5'
             ],
             
             cloud_routing: [

@@ -5,3 +5,13 @@ spring:
     config:
       uri: http://${CONFIG_HOST:localhost}:${CONFIG_PORT:8888}
       failFast: true
+  kafka:
+    bootstrap-servers: '10.0.2.15:9092'
+    topic: employees
+
+integration:
+  dir:
+    path: "/home/nikitanov/data/employees/"
+    refresh: 30000
+    file:
+      delimiter: ';'
