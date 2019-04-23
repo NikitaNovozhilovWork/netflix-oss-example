@@ -2,9 +2,9 @@ package com.epam.hw.netflix.config;
 
 import com.epam.hw.netflix.domain.Employee;
 import com.epam.hw.netflix.services.EmployeeService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.expression.ExpressionParser;
@@ -26,19 +26,13 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
-@Configuration
 @Slf4j
+@Configuration
+@RequiredArgsConstructor
 public class EmployeesRestIntegrationConfig {
 
-    @Value("${integration.dir.path}")
-    private String filesDir;
-
-    //TODO: extract
-    @Value("${integration.dir.file.delimiter:;}")
-    private String delimiter;
-
-    @Autowired
-    private EmployeeService employeeService;
+    private final IntegrationConfig integrationConfig;
+    private final EmployeeService employeeService;
 
     @Bean
     public ExpressionParser parser() {
@@ -61,16 +55,17 @@ public class EmployeesRestIntegrationConfig {
     }
 
     @Bean
+    @ConditionalOnProperty("integration.dir.path")
     public IntegrationFlow refreshFlow() {
         return IntegrationFlows.from(refreshGate())
                 .channel("refreshChannel")
                 .handle(m -> {
-                    File[] files = new File(filesDir).listFiles((File pathname) -> pathname.getName().endsWith(".csv"));
+                    File[] files = new File(integrationConfig.getPath()).listFiles((File pathname) -> pathname.getName().endsWith(".csv"));
                     if (files != null) {
                         for (File file : files) {
                             try (Stream<String> stream = java.nio.file.Files.lines(Paths.get(file.getAbsolutePath()))) {
                                 stream.forEach(line -> {
-                                    String[] placeInfo = line.split(delimiter);
+                                    String[] placeInfo = line.split(integrationConfig.getFileDelimiter());
                                     employeeService.changeWorkplace(placeInfo[0], placeInfo[1]);
                                 });
                             } catch (IOException e) {
