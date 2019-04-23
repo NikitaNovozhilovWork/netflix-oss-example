@@ -40,7 +40,7 @@ public class EmployeesKafkaIntegrationConfig {
         return IntegrationFlows
                 .from(Kafka.messageDrivenChannelAdapter(consumerFactory, KafkaMessageDrivenChannelAdapter.ListenerMode.record, springIntegrationKafkaTopic))
                 .transform(Transformers.fromJson(Employee.class, mapper))
-                .handle("employeeEndpoint", "post").get();
+                .handle("employeeEndpoint", "save").get();
     }
 
     @Bean

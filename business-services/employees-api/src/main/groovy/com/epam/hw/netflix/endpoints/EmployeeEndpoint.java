@@ -1,10 +1,10 @@
 package com.epam.hw.netflix.endpoints;
 
+import com.epam.hw.netflix.config.IntegrationConfig;
 import com.epam.hw.netflix.domain.Employee;
 import com.epam.hw.netflix.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -15,13 +15,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EmployeeEndpoint {
 
-    //TODO: extract
-    @Value("${integration.dir.file.delimiter:;}")
-    private String delimiter;
-
     private static final String STATUSCODE_HEADER = "http_statusCode";
 
     private final EmployeeService employeeService;
+    private final IntegrationConfig integrationConfig;
 
     public void save(Message<Employee> employeeMessage) {
         employeeService.addEmployee(employeeMessage.getPayload());
@@ -33,7 +30,7 @@ public class EmployeeEndpoint {
 
     public void changePlace(Message<String> placeCsv) {
         log.info(placeCsv.getPayload());
-        String[] placeInfo = placeCsv.getPayload().split(delimiter);
+        String[] placeInfo = placeCsv.getPayload().split(integrationConfig.getFileDelimiter());
         employeeService.changeWorkplace(placeInfo[0], placeInfo[1]);
     }
 
