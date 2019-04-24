@@ -41,8 +41,10 @@ services:
     environment:
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://10.0.2.15:9092
-      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_CREATE_TOPICS: "employees:1:1"
       KAFKA_ZOOKEEPER_CONNECT: 10.0.2.15:2181
+    depends_on:
+      - zookeeper
 
   hystrix-dashboard:
     image: kennedyoliveira/hystrix-dashboard:1.5.6
