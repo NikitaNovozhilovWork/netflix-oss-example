@@ -46,7 +46,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>openjdk:8-alpine</image>
+                        <image>openjdk:8-stretch</image>
                     </from>
                     <to>
                         <image>nikitanov/config-server:0.0.1</image>

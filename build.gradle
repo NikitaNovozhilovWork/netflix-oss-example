@@ -63,7 +63,7 @@ subprojects {
 	//./gradlew clean build jibDockerBuild
 	jib {
 		from {
-			image = 'openjdk:8-alpine'
+			image = 'openjdk:8-stretch'
 		}
 		to {
 			credHelper = 'nikitanov'
