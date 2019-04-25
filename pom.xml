@@ -8,9 +8,9 @@
         <version>2.1.4.RELEASE</version>
     </parent>
     <groupId>com.epam</groupId>
-    <artifactId>spring-boot2-netflix-oss</artifactId>
+    <artifactId>netflix-oss-example</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>spring-boot2-netflix-oss</name>
+    <name>netflix-oss-example</name>
     <description>Demo project for Spring Boot with netflix</description>
     <packaging>pom</packaging>
 
@@ -39,6 +39,7 @@
 
     <build>
         <pluginManagement>
+            <!--./mvnw clean package jib:dockerBuild-->
             <plugins>
                 <plugin>
                     <groupId>com.google.cloud.tools</groupId>

@@ -22,6 +22,8 @@ import org.springframework.integration.mapping.HeaderMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -47,7 +49,11 @@ public class EmployeesRestIntegrationConfig {
     @Bean
     public MessagingGatewaySupport refreshGate() {
         HttpRequestHandlingMessagingGateway handler = new HttpRequestHandlingMessagingGateway();
-        handler.setRequestMapping(createMapping(new HttpMethod[]{HttpMethod.GET}, "/waffles/refresh"));
+        handler.setRequestMapping(createMapping(
+                new HttpMethod[]{HttpMethod.GET},
+                Collections.singletonList(""),
+                Collections.singletonList("application/json"),
+                "/employees/integration/refresh"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
         handler.setHeaderMapper(headerMapper());
 
@@ -80,7 +86,11 @@ public class EmployeesRestIntegrationConfig {
     @Bean
     public MessagingGatewaySupport httpGetGate() {
         HttpRequestHandlingMessagingGateway handler = new HttpRequestHandlingMessagingGateway();
-        handler.setRequestMapping(createMapping(new HttpMethod[]{HttpMethod.GET}, "/waffles/{employeesId}"));
+        handler.setRequestMapping(createMapping(
+                new HttpMethod[]{HttpMethod.GET},
+                Collections.singletonList(""),
+                Collections.singletonList("application/json"),
+                "/employees/integration/{employeesId}"));
         handler.setPayloadExpression(parser().parseExpression("#pathVariables.employeesId"));
         handler.setHeaderMapper(headerMapper());
 
@@ -95,7 +105,11 @@ public class EmployeesRestIntegrationConfig {
     @Bean
     public MessagingGatewaySupport httpPostPutGate() {
         HttpRequestHandlingMessagingGateway handler = new HttpRequestHandlingMessagingGateway();
-        handler.setRequestMapping(createMapping(new HttpMethod[]{HttpMethod.PUT, HttpMethod.POST}, "/waffles", "/waffles/{employeesId}"));
+        handler.setRequestMapping(createMapping(
+                new HttpMethod[]{HttpMethod.PUT, HttpMethod.POST},
+                Collections.singletonList("application/json"),
+                Collections.singletonList("application/json"),
+                "/employees/integration", "/employees/integration/{employeesId}"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
         handler.setRequestPayloadTypeClass(Employee.class);
         handler.setHeaderMapper(headerMapper());
@@ -122,11 +136,13 @@ public class EmployeesRestIntegrationConfig {
         return IntegrationFlows.from("httpPutChannel").handle("employeeEndpoint", "update").get();
     }
 
-    private RequestMapping createMapping(HttpMethod[] method, String... path) {
+    private RequestMapping createMapping(HttpMethod[] method, List<String> consumes, List<String> produces, String... path) {
         RequestMapping requestMapping = new RequestMapping();
         requestMapping.setMethods(method);
-        requestMapping.setConsumes("application/json");
-        requestMapping.setProduces("application/json");
+        //requestMapping.setConsumes("application/json");
+        requestMapping.setConsumes(consumes.toArray(new String[0]));
+        //requestMapping.setProduces("application/json");
+        requestMapping.setProduces(produces.toArray(new String[0]));
         requestMapping.setPathPatterns(path);
 
         return requestMapping;
