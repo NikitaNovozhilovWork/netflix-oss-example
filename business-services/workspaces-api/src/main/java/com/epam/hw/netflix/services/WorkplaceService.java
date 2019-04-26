@@ -19,4 +19,8 @@ public class WorkplaceService {
                 .findById(id)
                 .orElseThrow(() -> new NoWorkspaceFoundException(format("No workspace found with id: %s", id)));
     }
+
+    public void addWorkspace(Workspace workspace) {
+        workspacesRepository.save(workspace);
+    }
 }

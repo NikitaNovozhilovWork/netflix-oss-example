@@ -51,9 +51,9 @@ public class EmployeesRestIntegrationConfig {
         HttpRequestHandlingMessagingGateway handler = new HttpRequestHandlingMessagingGateway();
         handler.setRequestMapping(createMapping(
                 new HttpMethod[]{HttpMethod.GET},
-                Collections.singletonList(""),
                 Collections.singletonList("application/json"),
-                "/employees/integration/refresh"));
+                Collections.singletonList("application/json"),
+                "/integration/employees/refresh"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
         handler.setHeaderMapper(headerMapper());
 
@@ -88,9 +88,9 @@ public class EmployeesRestIntegrationConfig {
         HttpRequestHandlingMessagingGateway handler = new HttpRequestHandlingMessagingGateway();
         handler.setRequestMapping(createMapping(
                 new HttpMethod[]{HttpMethod.GET},
-                Collections.singletonList(""),
                 Collections.singletonList("application/json"),
-                "/employees/integration/{employeesId}"));
+                Collections.singletonList("application/json"),
+                "/integration/employees/{employeesId}"));
         handler.setPayloadExpression(parser().parseExpression("#pathVariables.employeesId"));
         handler.setHeaderMapper(headerMapper());
 
@@ -109,7 +109,7 @@ public class EmployeesRestIntegrationConfig {
                 new HttpMethod[]{HttpMethod.PUT, HttpMethod.POST},
                 Collections.singletonList("application/json"),
                 Collections.singletonList("application/json"),
-                "/employees/integration", "/employees/integration/{employeesId}"));
+                "/integration/employees", "/integration/employees/{employeesId}"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
         handler.setRequestPayloadTypeClass(Employee.class);
         handler.setHeaderMapper(headerMapper());
@@ -139,9 +139,7 @@ public class EmployeesRestIntegrationConfig {
     private RequestMapping createMapping(HttpMethod[] method, List<String> consumes, List<String> produces, String... path) {
         RequestMapping requestMapping = new RequestMapping();
         requestMapping.setMethods(method);
-        //requestMapping.setConsumes("application/json");
         requestMapping.setConsumes(consumes.toArray(new String[0]));
-        //requestMapping.setProduces("application/json");
         requestMapping.setProduces(produces.toArray(new String[0]));
         requestMapping.setPathPatterns(path);
 
