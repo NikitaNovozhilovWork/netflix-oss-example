@@ -59,7 +59,8 @@ subprojects {
 	task sourceJar(type: Jar) {
 		from sourceSets.main.allJava
 	}
-
+	
+	//./gradlew clean build jibDockerBuild
 	jib {
 		from {
 			image = 'openjdk:8-stretch'

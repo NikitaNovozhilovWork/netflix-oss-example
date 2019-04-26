@@ -1,36 +1,53 @@
-## Практическое задание по микросервисной архитектуре 
-###Часть I. Netflix OSS
+Implementation for the https://bitbucket.org/Insomnium/netflix-oss-homework/src/master/ with additional features
 
-1. Необходимо настроить **config-server** таким образом, чтобы все сервисы, использующие eureka для service-discovery могли доступиться к нему по порту 8282.
-Для хранения конфигурации **config-server'а** предагается использовать GIT - заведите отдельный репозиторий.
-Менять опцию `server.port: 8989` в **bootstrap.yml** проекта **eureka-server** запрещено.
+Startup
+-------
+To generate docker images, run ***./mvnw clean package jib:dockerBuild*** or you can run ***./gradlew clean build jibDockerBuild*** 
+To run this example, run ***docker-compose up -d***. To stop all running services, run ***docker-compose stop***.
 
-    Также, **config-server** *не должен* регистрироваться в eureka.
-    Запустите **config-server**, он должен подняться на порту `8888`.
+> [!NOTE]
+Sometimes elk cannot start due to lack of CPU time while all other services are starting. You can simply start the elk ***docker start elk_5601*** when everything else will be ready.
 
-2. Настройте и запустите **eureka-server** - он понадобится для service-discovery. 
+> [!WARNING]
+hosts for the services now is 10.0.2.15, you can change it in the ***.env** files in the **./env** folder
 
-    См. п. 1 - менять порт в `bootstrap.yml` **нельзя**.
+Links
+-------
 
-3. Запустите 2 инстанса бизнес-сервиса **workspaces-api**. Данный сервис предоставляет информацию о рабочих местах сотрудников. Для запуска на разных портах можно использовать JVM args (например `-Dserver.port=9090` и `-Dserver.port=9091`) 
-Сервис **workspaces-api** должен быть зарегистрирован в eureka, для этого его нужно доработать.
+### Services
 
-4. Запустите 1 инстанс бизнес-сервиса **employees-api** (`-Dserver.port=9092`), предоставляющего информацию о сотрудниках. Сервис также нужно поправить, чтобы он регистрировался в **eureka**.
- 
-    Обратите внимание на `EmployeeAPIController`. В строке 29 необходимо получить рабочее место - инстанс `Workspace`. Получить его нужно таким образом, чтобы каждый последующий вызов опрашивал запущенные в п. 3 инстансы **workspaces-api** через round robin. 
-    Для вызова сервиса `WorkplaceAPIController` используйте **Feign client**.
+#### Business services
+Workspaces Api №1 - ***http://localhost:9090/manage/mappings*** 
+Workspaces Api №2 - ***http://localhost:9091/manage/mappings***
+Employees Api - ***http://localhost:9093/manage/mappings***
 
-5. Если вы сделали всё правильно, вы можете получить информацию о воркспейсах и пользователях GET запросами к ресурсам:
-```
-http://localhost:9090/workspaces/0000001
-http://localhost:9091/workspaces/0000001
-http://localhost:9092/employees/0000001
-```
+#### Support Services
+Api Gateway - ***http://localhost:9094/manage/mappings***
+Eureka - ***http://localhost:8282/***
+ConfigServer - ***http://localhost:8888/manage/health***
 
-при этом вы будете получать 2 разных `serialNumber` при последовательном опросе **employees-api** сервиса. По логам инстансов **workspaces-api** можно заменить, что нагрузка балансируется между инстансами.
+### Infrastructure
+Kibana - ***http://localhost:5601/app/kibana#/home?_g=()***
+Elasticsearch - ***http://localhost:9200/***
+Logstash - ***localhost:5044***
+PostgreSQL - ***localhost:5432***
+Zookeeper - ***localhost:2181***
+Kafka - ***localhost:9092***
+Hystrix Dashboard - ***http://localhost:7979/hystrix-dashboard/***
+Zipkin Dashboard - ***http://localhost:9411/zipkin/***
 
-Сконфигурируйте и запустите **api-gateway** на порту 9094 и настройте роутинг на бизнес-сервисы. Сделайте так, чтобы информацию по пользователям и воркспейсам можно было получить через ресурсы:
-```
-http://localhost:9094/workspaces-service/workspaces/0000001
-http://localhost:9094/employees-service/employees/0000001
-```
+### Service links
+
+#### Employees Api
+Get full employee info - *curl -X GET http://localhost:9093/employees/0000001*
+Get employee info - *curl -X GET -H "Content-Type: application/json " http://localhost:9093/integration/employees/0000001*
+Add new employee - *curl -X POST -H "Content-Type: application/json" -d '{"id":"1000001","firstName":"FirstName","lastName":"LastName","email":"email@email.com","workspaceId":"1000001"}' http://localhost:9093/integration/employees/* or *curl -X PUT -H "Content-Type: application/json" -d '{"id":"1000001","firstName":"FirstName","lastName":"LastName","email":"email@email.com","workspaceId":"1000001"}' http://localhost:9093/integration/employees/1000001*
+Manually refresh info about employees workplaces from csv files in */data/employees/* directory - *curl -X GET -H "Content-Type: application/json" http://lhost:9093/integration/employees/refresh*
+
+#### Workspaces Api 
+Get workspace info - *http://localhost:9091/workspaces/0000001 or http://localhost:9090/workspaces/0000001*
+Add new workspace - *curl -X POST -H "Content-Type: application/json" -d '{"id":"1000001","unit":100,"seat":100,"serialNumber":"Serial #","osFamily":"LINUX"}' http://localhost:9091/workspaces* or *curl -X PUT -H "Content-Type: application/json" -d '{"id":"1000001","unit":100,"seat":100,"serialNumber":"Serial #","osFamily":"LINUX"}' http://localhost:9090/workspaces/1000001*
+
+#### Api Gateway
+Call workspaces api through gateway - ___http://localhost:9094/workspaces-service/___workspaces/0000001
+Call employees api through gateway - ___http://localhost:9094/employees-service/___employees/0000001

@@ -2,8 +2,10 @@ version '0.0.2'
 
 bootJar.enabled = false
 jar.enabled = true
+tasks.jibDockerBuild.enabled = false
 
 dependencies {
     compile libpacks.lombok
     compile libpacks.cloud_feign
+    compile libpacks.spring_data
 }

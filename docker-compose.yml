@@ -19,6 +19,35 @@ services:
     volumes:
       - ./elk/input.conf:/etc/logstash/conf.d/02-beats-input.conf
 
+  postgresql:
+    image: postgres:11.2-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./env/postgresql.env
+    environment:
+      - POSTGRES_DB=netflix_oss
+
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper
+    ports:
+     - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka:2.12-2.2.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    env_file:
+      - ./env/kafka.env
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CREATE_TOPICS: "employees:1:1"
+    depends_on:
+      - zookeeper
+
   hystrix-dashboard:
     image: kennedyoliveira/hystrix-dashboard:1.5.6
     container_name: hystrix_7979
@@ -37,21 +66,20 @@ services:
     restart: on-failure
     ports:
       - "8888:8080"
+    env_file:
+      - ./env/config-server.env
     environment:
-      SERVER_PORT: 8080
-      CONFIG_HOST: 10.0.2.15
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
+      SERVER_PORT: 8080
       SERVER_NON_SECURE_PORT: 8888
     volumes:
       - ./logback/logback.xml:/logback/logback-spring.xml
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/manage/health"]
       interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   eureka:
     image: nikitanov/eureka-server:0.0.1
@@ -59,15 +87,11 @@ services:
     restart: on-failure
     ports:
       - "8282:8080"
+    env_file:
+      - ./env/.env
+      - ./env/eureka.env
     environment:
-      CONFIG_HOST: 10.0.2.15
-      CONFIG_PORT: 8888
-      EUREKA_HOST: 10.0.2.15
-      EUREKA_PORT: 8282
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
-      SERVER_HOST: 10.0.2.15
       SERVER_PORT: 8080
       SERVER_NON_SECURE_PORT: 8282
     volumes:
@@ -77,9 +101,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/manage/health"]
       interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   workspaces_1:
     image: nikitanov/workspaces-api:0.0.1
@@ -87,17 +111,11 @@ services:
     restart: on-failure
     ports:
       - "9090:8080"
+    env_file:
+      - ./env/.env
+      - ./env/workspaces.env
     environment:
-      CONFIG_HOST: 10.0.2.15
-      CONFIG_PORT: 8888
-      EUREKA_HOST: 10.0.2.15
-      EUREKA_PORT: 8282
-      ZIPKIN_HOST: 10.0.2.15
-      ZIPKIN_PORT: 9411
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
-      SERVER_HOST: 10.0.2.15
       SERVER_PORT: 8080
       SERVER_NON_SECURE_PORT: 9090
     volumes:
@@ -112,17 +130,11 @@ services:
     restart: on-failure
     ports:
       - "9091:8080"
+    env_file:
+      - ./env/.env
+      - ./env/workspaces.env
     environment:
-      CONFIG_HOST: 10.0.2.15
-      CONFIG_PORT: 8888
-      EUREKA_HOST: 10.0.2.15
-      EUREKA_PORT: 8282
-      ZIPKIN_HOST: 10.0.2.15
-      ZIPKIN_PORT: 9411
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
-      SERVER_HOST: 10.0.2.15
       SERVER_PORT: 8080
       SERVER_NON_SECURE_PORT: 9091
     volumes:
@@ -133,24 +145,19 @@ services:
 
   employees:
     image: nikitanov/employees-api:0.0.1
-    container_name: employees_9092
+    container_name: employees_9093
     restart: on-failure
     ports:
-      - "9092:8080"
+      - "9093:8080"
+    env_file:
+      - ./env/.env
+      - ./env/employees.env
     environment:
-      CONFIG_HOST: 10.0.2.15
-      CONFIG_PORT: 8888
-      EUREKA_HOST: 10.0.2.15
-      EUREKA_PORT: 8282
-      ZIPKIN_HOST: 10.0.2.15
-      ZIPKIN_PORT: 9411
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
-      SERVER_HOST: 10.0.2.15
       SERVER_PORT: 8080
-      SERVER_NON_SECURE_PORT: 9092
+      SERVER_NON_SECURE_PORT: 9093
     volumes:
+      - /data/employees:/data/employees
       - ./logback/logback.xml:/logback/logback-spring.xml
     depends_on:
       - config-server
@@ -162,17 +169,11 @@ services:
     restart: on-failure
     ports:
       - "9094:8080"
+    env_file:
+      - ./env/.env
+      - ./env/gateway.env
     environment:
-      CONFIG_HOST: 10.0.2.15
-      CONFIG_PORT: 8888
-      EUREKA_HOST: 10.0.2.15
-      EUREKA_PORT: 8282
-      ZIPKIN_HOST: 10.0.2.15
-      ZIPKIN_PORT: 9411
       LOGGING_CONFIG: "/logback/logback-spring.xml"
-      LOGSTASH_HOST: 10.0.2.15
-      LOGSTASH_PORT: 5044
-      SERVER_HOST: 10.0.2.15
       SERVER_PORT: 8080
       SERVER_NON_SECURE_PORT: 9094
     volumes:
