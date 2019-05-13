@@ -45,6 +45,10 @@ ext {
                     'org.springframework.boot:spring-boot-starter-data-jpa',
                     'org.postgresql:postgresql:42.2.5'
             ],
+
+            liquibase: [
+                    'org.liquibase:liquibase-core'
+            ],
             
             cloud_routing: [
                     'org.springframework.cloud:spring-cloud-starter-netflix-zuul'

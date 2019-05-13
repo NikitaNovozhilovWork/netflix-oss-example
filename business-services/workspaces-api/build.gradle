@@ -7,6 +7,7 @@ dependencies {
     compile libpacks.logstash
     compile libpacks.cloud_sleuth
     compile libpacks.cloud_zipkin
+    compile libpacks.liquibase
 }
 
 mainClassName = "com.epam.hw.netflix.WorkplacesApplication"

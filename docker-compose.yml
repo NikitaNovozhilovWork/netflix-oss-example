@@ -123,6 +123,7 @@ services:
     depends_on:
       - config-server
       - eureka
+      - postgresql
 
   workspaces_2:
     image: nikitanov/workspaces-api:0.0.1
@@ -142,6 +143,7 @@ services:
     depends_on:
       - config-server
       - eureka
+      - postgresql
 
   employees:
     image: nikitanov/employees-api:0.0.1
@@ -162,6 +164,8 @@ services:
     depends_on:
       - config-server
       - eureka
+      - postgresql
+      - kafka
 
   gateway:
     image: nikitanov/api-gateway:0.0.1
