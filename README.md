@@ -72,6 +72,6 @@ Add new workspace - *curl -X POST -H "Content-Type: application/json" -d '{"id":
 
 #### Api Gateway
 
-Call workspaces api through gateway - ___http://localhost:9094/workspaces-service/___workspaces/0000001
+Call workspaces api through gateway - *http://localhost:9094/workspaces-service/workspaces/0000001*
 
-Call employees api through gateway - ___http://localhost:9094/employees-service/___employees/0000001
+Call employees api through gateway - *http://localhost:9094/employees-service/employees/0000001*
