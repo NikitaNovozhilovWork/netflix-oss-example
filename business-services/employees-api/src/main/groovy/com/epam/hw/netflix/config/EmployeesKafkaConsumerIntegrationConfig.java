@@ -22,12 +22,7 @@ import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty("spring.kafka.bootstrap-servers")
-public class EmployeesKafkaIntegrationConfig {
-
-    @Bean
-    JsonObjectMapper<?, ?> mapper() {
-        return new Jackson2JsonObjectMapper();
-    }
+public class EmployeesKafkaConsumerIntegrationConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -36,11 +31,17 @@ public class EmployeesKafkaIntegrationConfig {
     private String springIntegrationKafkaTopic;
 
     @Bean
+    JsonObjectMapper<?, ?> mapper() {
+        return new Jackson2JsonObjectMapper();
+    }
+
+    @Bean
     public IntegrationFlow listeningFromKafkaFlow(ConsumerFactory<String, String> consumerFactory, JsonObjectMapper<?, ?> mapper) {
         return IntegrationFlows
                 .from(Kafka.messageDrivenChannelAdapter(consumerFactory, KafkaMessageDrivenChannelAdapter.ListenerMode.record, springIntegrationKafkaTopic))
                 .transform(Transformers.fromJson(Employee.class, mapper))
-                .handle("employeeEndpoint", "save").get();
+                .handle("employeeEndpoint", "save")
+                .get();
     }
 
     @Bean
