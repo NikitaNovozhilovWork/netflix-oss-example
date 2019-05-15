@@ -1,9 +1,11 @@
 package com.epam.hw.netflix.config;
 
 import com.epam.hw.netflix.domain.Employee;
+import com.epam.hw.netflix.gateways.KafkaGateway;
 import com.epam.hw.netflix.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.Transformers;
 import org.springframework.integration.gateway.MessagingGatewaySupport;
 import org.springframework.integration.http.inbound.HttpRequestHandlingMessagingGateway;
 import org.springframework.integration.http.inbound.RequestMapping;
@@ -35,6 +38,10 @@ public class EmployeesRestIntegrationConfig {
 
     private final IntegrationConfig integrationConfig;
     private final EmployeeService employeeService;
+    private final KafkaGateway kafkaGateway;
+
+    @Value("${spring.kafka.topic}")
+    private String springIntegrationKafkaTopic;
 
     @Bean
     public ExpressionParser parser() {
@@ -42,7 +49,7 @@ public class EmployeesRestIntegrationConfig {
     }
 
     @Bean
-    public HeaderMapper<HttpHeaders> headerMapper() {
+    public HeaderMapper<HttpHeaders> httpHeaderMapper() {
         return new DefaultHttpHeaderMapper();
     }
 
@@ -55,7 +62,7 @@ public class EmployeesRestIntegrationConfig {
                 Collections.singletonList("application/json"),
                 "/integration/employees/refresh"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
-        handler.setHeaderMapper(headerMapper());
+        handler.setHeaderMapper(httpHeaderMapper());
 
         return handler;
     }
@@ -92,7 +99,7 @@ public class EmployeesRestIntegrationConfig {
                 Collections.singletonList("application/json"),
                 "/integration/employees/{employeesId}"));
         handler.setPayloadExpression(parser().parseExpression("#pathVariables.employeesId"));
-        handler.setHeaderMapper(headerMapper());
+        handler.setHeaderMapper(httpHeaderMapper());
 
         return handler;
     }
@@ -112,28 +119,41 @@ public class EmployeesRestIntegrationConfig {
                 "/integration/employees", "/integration/employees/{employeesId}"));
         handler.setStatusCodeExpression(parser().parseExpression("T(org.springframework.http.HttpStatus).NO_CONTENT"));
         handler.setRequestPayloadTypeClass(Employee.class);
-        handler.setHeaderMapper(headerMapper());
+        handler.setHeaderMapper(httpHeaderMapper());
 
         return handler;
     }
 
     @Bean
     public IntegrationFlow httpPostPutFlow() {
-        return IntegrationFlows.from(httpPostPutGate()).channel("routeRequest").route("headers.http_requestMethod",
-                m -> m.prefix("http").suffix("Channel")
-                        .channelMapping("PUT", "Put")
-                        .channelMapping("POST", "Post")
-        ).get();
+        return IntegrationFlows.from(httpPostPutGate())
+                .channel("routeRequest")
+                .route("headers.http_requestMethod",
+                        m -> m.prefix("http").suffix("Channel")
+                                .channelMapping("PUT", "Put")
+                                .channelMapping("POST", "Post"))
+                .get();
     }
 
     @Bean
     public IntegrationFlow httpPostFlow() {
-        return IntegrationFlows.from("httpPostChannel").handle("employeeEndpoint", "save").get();
+        return IntegrationFlows.from("httpPostChannel")
+                .transform(Transformers.toJson())
+                .handle(message -> {
+                    System.out.println("httpPostFlow received message - " + message);
+                    kafkaGateway.sendToKafka(
+                        (String) message.getPayload(),
+                        springIntegrationKafkaTopic); })
+                .get();
     }
 
     @Bean
     public IntegrationFlow httpPutFlow() {
-        return IntegrationFlows.from("httpPutChannel").handle("employeeEndpoint", "update").get();
+        return IntegrationFlows.from("httpPutChannel")
+                .handle(message -> kafkaGateway.sendToKafka(
+                        (String) message.getPayload(),
+                        springIntegrationKafkaTopic))
+                .get();
     }
 
     private RequestMapping createMapping(HttpMethod[] method, List<String> consumes, List<String> produces, String... path) {
